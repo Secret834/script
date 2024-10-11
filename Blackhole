@@ -1,20 +1,13 @@
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
-
--- Fonction pour téléporter tous les blocs non ancrés sur le joueur
 local function teleportUnanchoredBlocks()
-    -- Boucle à travers tous les objets dans le Workspace
     for _, obj in ipairs(workspace:GetDescendants()) do
-        -- Vérifie si l'objet est une base part (une partie physique) et qu'il n'est pas ancré
         if obj:IsA("BasePart") and not obj.Anchored then
-            -- Téléporte l'objet à la position du joueur
             obj.Position = character.HumanoidRootPart.Position + Vector3.new(0, 5, 0) -- Téléporte juste au-dessus du joueur
         end
     end
 end
-
--- Boucle en continu pour téléporter les blocs
 while true do
     teleportUnanchoredBlocks()
-    wait(0.5) -- Attente de 0.5 seconde avant de répéter la boucle
+    wait(0.5)
 end
