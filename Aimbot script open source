@@ -1,0 +1,461 @@
+-- Open source Script by zakolm
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/miroeramaa/TurtleLib/main/TurtleUiLib.lua"))()
+local Player = library:Window("Player")
+local Esp = library:Window("Esp")
+local Aimbot = library:Window("Aimbot")
+local hitbox = library:Window("Hitbox")
+local Setting = library:Window("Setting")
+
+
+
+Player:Slider("Walkspeed", 0, 200, 16, function(value)
+    local player = game.Players.LocalPlayer
+    player.Character.Humanoid.WalkSpeed = value
+end)
+
+Player:Slider("Jump Power", 0, 200, 50, function(value)
+    local player = game.Players.LocalPlayer
+    player.Character.Humanoid.JumpPower = value
+    player.Character.Humanoid.JumpHeight = value
+end)
+
+Player:Toggle("No Gravity", false, function(bool)
+    game.Workspace.Gravity = bool and 0 or 196.2
+end)
+
+Player:Toggle("Noclip", false, function(bool)
+    local Noclip = nil
+    local Clip = nil
+    
+    function noclip()
+        Clip = false
+        local function Nocl()
+            if Clip == false and game.Players.LocalPlayer.Character ~= nil then
+                for _,v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                    if v:IsA('BasePart') and v.CanCollide and v.Name ~= floatName then
+                        v.CanCollide = false
+                    end
+                end
+            end
+            wait(0.21) 
+        end
+        Noclip = game:GetService('RunService').Stepped:Connect(Nocl)
+    end
+    
+    function clip()
+        if Noclip then Noclip:Disconnect() end
+        Clip = true
+    end
+    
+    noclip() 
+end)
+
+Player:Button("Infinity jumps", function()
+_G.infinjump = not _G.infinjump
+
+if _G.infinJumpStarted == nil then
+	_G.infinJumpStarted = true
+	local plr = game:GetService('Players').LocalPlayer
+	local m = plr:GetMouse()
+	m.KeyDown:connect(function(k)
+		if _G.infinjump then
+			if k:byte() == 32 then
+			humanoid = game:GetService'Players'.LocalPlayer.Character:FindFirstChildOfClass('Humanoid')
+			humanoid:ChangeState('Jumping')
+			wait()
+			humanoid:ChangeState('Seated')
+			end
+		end
+	end)
+end
+end)
+
+
+Player:Button("Reset", function()
+    local player = game.Players.LocalPlayer
+    player.Character.Humanoid.Health = 0
+end)
+
+local espEnabled = false
+local teamCheckEnabled = true
+local espColor = Color3.fromRGB(0, 255, 0) 
+
+Esp:Toggle("Esp", false, function(bool)
+    espEnabled = bool
+    print(`Voici la meilleur serie de tous les temps https://wiflix-catalogue.lol/serie-en-streaming/31571-from-2022-saison-3.html`)
+end)
+
+Esp:Toggle("Team check", true, function(bool)
+    teamCheckEnabled = bool
+end)
+
+
+
+Esp:ColorPicker("Color ", Color3.fromRGB(255, 255, 255), function(color)
+    espColor = color
+end)
+
+
+function CreateESP(player)
+    local Top = Drawing.new("Line")
+    local Bottom = Drawing.new("Line")
+    local Left = Drawing.new("Line")
+    local Right = Drawing.new("Line")
+
+    local function updateESP()
+        game:GetService("RunService").RenderStepped:Connect(function()
+            if espEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Name ~= game.Players.LocalPlayer.Name and player.Character.Humanoid.Health > 0 then
+                local camera = game.Workspace.CurrentCamera
+                local ScreenPos, OnScreen = camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+                if OnScreen then
+                    local Scale = player.Character.Head.Size.Y / 2
+                    local Size = Vector3.new(2, 3, 0) * (Scale * 2)
+                    local TL = camera:WorldToViewportPoint((player.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, Size.Y, 0)).p)
+                    local TR = camera:WorldToViewportPoint((player.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, Size.Y, 0)).p)
+                    local BL = camera:WorldToViewportPoint((player.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, -Size.Y, 0)).p)
+                    local BR = camera:WorldToViewportPoint((player.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, -Size.Y, 0)).p)
+
+                    Top.From = Vector2.new(TL.X, TL.Y)
+                    Top.To = Vector2.new(TR.X, TR.Y)
+                    Left.From = Vector2.new(TL.X, TL.Y)
+                    Left.To = Vector2.new(BL.X, BL.Y)
+                    Right.From = Vector2.new(TR.X, TR.Y)
+                    Right.To = Vector2.new(BR.X, BR.Y)
+                    Bottom.From = Vector2.new(BL.X, BL.Y)
+                    Bottom.To = Vector2.new(BR.X, BR.Y)
+
+                    local color
+                    if teamCheckEnabled then
+                        color = player.TeamColor == game.Players.LocalPlayer.TeamColor and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+                    else
+                        color = espColor
+                    end
+
+                    Top.Color = color
+                    Left.Color = color
+                    Bottom.Color = color
+                    Right.Color = color
+
+                    Top.Visible = true
+                    Left.Visible = true
+                    Bottom.Visible = true
+                    Right.Visible = true
+                else
+                    Top.Visible = false
+                    Left.Visible = false
+                    Bottom.Visible = false
+                    Right.Visible = false
+                end
+            else
+                Top.Visible = false
+                Left.Visible = false
+                Bottom.Visible = false
+                Right.Visible = false
+            end
+        end)
+    end
+
+    updateESP()
+end
+
+for _, v in pairs(game.Players:GetPlayers()) do
+    if v ~= game.Players.LocalPlayer then
+        CreateESP(v)
+    end
+end
+
+game.Players.PlayerAdded:Connect(function(player)
+    if player ~= game.Players.LocalPlayer then
+        CreateESP(player)
+    end
+end)
+
+local Activedaimbot = "MouseButton2"
+local aimbotActive = false
+local wallCheck = false
+local isAlive = false
+local teamCheck = false
+local povActive = false
+local povSize = 200
+local povColor = Color3.fromRGB(255, 255, 255)
+local povBackTransparent = false
+local circle = nil 
+local uiStroke = nil 
+local closestPlayer = nil 
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+
+local function isPlayerBehindWall(localPlayer, targetPlayer)
+    local localPosition = localPlayer.Character.HumanoidRootPart.Position
+    local targetPosition = targetPlayer.Character.HumanoidRootPart.Position
+    local direction = (targetPosition - localPosition).unit
+    local ray = Ray.new(localPosition, direction * (localPosition - targetPosition).magnitude)
+
+    local hit, hitPosition = Workspace:FindPartOnRay(ray, localPlayer.Character)
+    return hit ~= nil
+end
+
+local function getClosestPlayer()
+    local localPlayer = Players.LocalPlayer
+    local closestDistance = math.huge
+    local isAlive = true  -- Initialize isAlive variable
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            if not (teamCheck and player.Team == localPlayer.Team) then
+
+                if aliveCheck and player.Character:FindFirstChild("Humanoid") then
+                    isAlive = player.Character.Humanoid.Health > 0
+                end
+                
+                if isAlive then
+                    local distance = (localPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).magnitude
+                    
+                    if not (wallCheck and isPlayerBehindWall(localPlayer, player)) then
+                        if distance < closestDistance then
+                            closestDistance = distance
+                            closestPlayer = player
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    return closestPlayer
+end
+
+
+Aimbot:Toggle("Aimbot", false, function(bool)
+    aimbotActive = bool
+end)
+
+Aimbot:Toggle("Wall check", false, function(bool)
+    wallCheck = bool
+end)
+
+Aimbot:Toggle("Team check", false, function(bool)
+    teamCheck = bool
+end)
+
+Aimbot:Toggle("Alive check", true, function(bool)
+
+end)
+
+Aimbot:Toggle("Pov", true, function(bool)
+    povActive = bool
+    local player = game.Players.LocalPlayer
+    local screenGui = player:FindFirstChildOfClass("ScreenGui") or Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+
+    if povActive then
+        local function createCircle(size, color)
+            circle = Instance.new("Frame")
+            circle.Size = UDim2.new(0, size, 0, size)
+            circle.Position = UDim2.new(0.5, -size / 2, 0.5, -size / 2)
+            circle.AnchorPoint = Vector2.new(0.5, 0.5)
+            circle.Parent = screenGui
+            
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0, size / 2)
+            corner.Parent = circle
+            
+            circle.BackgroundColor3 = color
+            circle.BackgroundTransparency = povBackTransparent and 1 or 0
+        end
+        
+        createCircle(povSize, povColor)
+
+        RunService.RenderStepped:Connect(function()
+            if circle then
+                local mousePos = UserInputService:GetMouseLocation()
+                circle.Position = UDim2.new(0, mousePos.X, 0, mousePos.Y - 36)
+            end
+        end)
+    else
+        if circle then
+            circle:Destroy()
+            circle = nil
+        end
+    end
+end)
+
+
+
+Aimbot:Toggle("Pov Back Transparent", true, function(bool)
+    povBackTransparent = bool
+    if circle then
+        circle.BackgroundTransparency = bool and 1 or 0
+        if bool then
+            if not uiStroke then
+                uiStroke = Instance.new("UIStroke")
+                uiStroke.Thickness = 2
+                uiStroke.Color = povColor
+                uiStroke.Parent = circle
+            end
+        else
+            if uiStroke then
+                uiStroke:Destroy()
+                uiStroke = nil
+            end
+        end
+    end
+end)
+
+Aimbot:Box("Pov Size", function(text, focuslost)
+    if focuslost then
+        local size = tonumber(text)
+        if size then
+            povSize = size
+            if circle then
+                circle.Size = UDim2.new(0, povSize, 0, povSize)
+                local corner = circle:FindFirstChildOfClass("UICorner")
+                if corner then
+                    corner.CornerRadius = UDim.new(0, size / 2)
+                end
+            end
+        else
+            warn("Format de taille invalide. Veuillez entrer un nombre.")
+        end
+    end
+end)
+
+Aimbot:ColorPicker("Color ", Color3.fromRGB(255, 255, 255), function(color)
+    povColor = color
+end)
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType[Activedaimbot] and aimbotActive then
+        closestPlayer = getClosestPlayer() 
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType[Activedaimbot] then
+        closestPlayer = nil 
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if closestPlayer and aimbotActive then
+        if closestPlayer.Character and closestPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local targetPosition = closestPlayer.Character.HumanoidRootPart.Position
+            local camera = workspace.CurrentCamera
+            
+            if not (wallCheck and isPlayerBehindWall(Players.LocalPlayer, closestPlayer)) then
+                local direction = (targetPosition - camera.CFrame.Position).unit
+                camera.CFrame = CFrame.new(camera.CFrame.Position, camera.CFrame.Position + direction)
+            end
+        end
+    end
+end)
+
+local hitboxActive = false
+local hitboxSize = 10
+local hitboxColor = BrickColor.new("Bright red")
+local hitboxTeamCheck = false
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local function updateHitboxes()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= Players.LocalPlayer then
+            local character = player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local humanoidRootPart = character.HumanoidRootPart
+                if hitboxActive then
+                    if not (hitboxTeamCheck and player.Team and player.Team == Players.LocalPlayer.Team) then
+                        humanoidRootPart.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+                        humanoidRootPart.Transparency = 0.7
+                        humanoidRootPart.BrickColor = hitboxColor
+                        humanoidRootPart.Material = Enum.Material.Neon
+                        humanoidRootPart.CanCollide = false
+                    end
+                else
+                    humanoidRootPart.Size = Vector3.new(2, 2, 2) -- Reset size
+                    humanoidRootPart.Transparency = 0
+                    humanoidRootPart.BrickColor = BrickColor.new("Medium stone grey")
+                    humanoidRootPart.Material = Enum.Material.SmoothPlastic
+                end
+            end
+        end
+    end
+end
+
+local connection
+hitbox:Toggle("Hitbox", true, function(value)
+    hitboxActive = value
+    if value then
+        connection = RunService.RenderStepped:Connect(updateHitboxes)
+    else
+        if connection then
+            connection:Disconnect()
+            connection = nil
+        end
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local humanoidRootPart = player.Character.HumanoidRootPart
+                humanoidRootPart.Size = Vector3.new(2, 2, 2)
+                humanoidRootPart.Transparency = 0
+                humanoidRootPart.BrickColor = BrickColor.new("Medium stone grey")
+                humanoidRootPart.Material = Enum.Material.SmoothPlastic
+            end
+        end
+    end
+end)
+
+hitbox:Toggle("Team Check", false, function(value)
+    hitboxTeamCheck = value
+end)
+
+hitbox:Box("Size", function(input, focusLost)
+    if focusLost then
+        local size = tonumber(input)
+        if size and size > 0 then
+            hitboxSize = size
+        end
+    end
+end)
+
+
+
+hitbox:ColorPicker("Color ", Color3.fromRGB(255, 255, 255), function(color)
+    hitboxColor = BrickColor.new(color)
+end)
+
+Setting:Dropdown("Actived aimbot", {"MouseButton1", "MouseButton2"}, function(name)
+ Activedaimbot = name 
+end)
+ 
+
+Setting:Button("Unload script ", function()
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayers
+    local function removeTurtleUiLib()
+        local coreGui = game:GetService("CoreGui")
+        local turtleUi = coreGui:FindFirstChild("TurtleUiLib")
+        
+        if turtleUi then
+            turtleUi:Destroy()
+        end
+    end
+    removeTurtleUiLib()
+    
+aimbotActive = false
+espEnabled = false
+povActive = false
+hitboxActive = false
+_G.infinJumpStarted = false
+
+
+local player = game.Players.LocalPlayer
+player.Character.Humanoid.WalkSpeed = 16
+player.Character.Humanoid.JumpPower = 50
+player.Character.Humanoid.JumpHeight = 3.5
+player.Character.Humanoid.Health = 0
+player.Character.Humanoid.maxhealth = 100
+game.Workspace.Gravity =  196.2
+end)
+ 
